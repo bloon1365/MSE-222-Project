@@ -254,10 +254,10 @@ class path():
 				rev.append((x, y))
 			rev.reverse()
 		else:
-			for i in range(cuts):	
-				t=i/(cuts)
+			for i in range(cuts-1):	
+				t=i/(cuts-1)
 
-				ideal = tot/(cuts)
+				ideal = tot/(cuts-1)
 
 				t1 = length(ideal,xparams,yparams,t1,tot)
 
