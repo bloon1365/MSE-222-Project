@@ -1,7 +1,8 @@
 import os
 import pygame
 import math
-from Integrator import *
+from Integratorfast import *
+import matplotlib.pyplot as plt
 
 
 #line
@@ -14,7 +15,7 @@ names = ['<line', '<circle', '<ellipse', '<path']
 
 path = os.path.dirname(__file__)
 # filename = path + "/test2.svg"
-filename = path + "/test3.svg"
+filename = path + "/test2.svg"
 
 
 def inside(string, value):
@@ -183,7 +184,7 @@ class path():
 			ydist2 = math.sqrt((accelerationdist**2)/(1+(999999999)**2))*conversion
 
 
-		
+
 		if slope1x >= 0 and slope1y >= 0:
 			pygame.draw.circle(gameDisplay, red, (round((self.stroke[2][0]+self.start[0]+xdist1)*scale), round((self.stroke[2][1]+self.start[1]+ydist1)*scale)), 4)
 			self.accelpoint1 = ((self.stroke[2][0]+self.start[0]+xdist1), (self.stroke[2][1]+self.start[1]+ydist1))
@@ -211,24 +212,25 @@ class path():
 			self.accelpoint2 = ((self.start[0]-xdist2), (self.start[1]+ydist2))
 		# self.accelpoint2 = (0, 0)
 
-	def points(self):
+	def points(self, num):
 		self.drawlist = []	
 
 
+		if num == 1:
+			xdist = self.stroke[2][0]+self.start[0]-self.accelpoint1[0] 
+			ydist = self.stroke[2][1]+self.start[1]-self.accelpoint1[1]
 
-		xdist = self.stroke[2][0]+self.start[0]-self.accelpoint1[0] 
-		ydist = self.stroke[2][1]+self.start[1]-self.accelpoint1[1]
+			for t in range(int(accelerationtime*frames)):	
+				self.drawlist.append(((self.accelpoint1[0]+xdist*(t/(frames*accelerationtime))**2),(self.accelpoint1[1]+ydist*(t/(frames*accelerationtime))**2)))
+		else:
+			xdist = self.start[0]-self.accelpoint2[0]
+			ydist = self.start[1]-self.accelpoint2[1]
 
-		for t in range(int(accelerationtime*frames)+1):	
-			self.drawlist.append(((self.accelpoint1[0]+xdist*(t/(frames*accelerationtime))**2),(self.accelpoint1[1]+ydist*(t/(frames*accelerationtime))**2)))
+			for t in range(int(accelerationtime*frames)+1):	
+				self.drawlist.append(((self.accelpoint2[0]+xdist*(t/(frames*accelerationtime))**2),(self.accelpoint2[1]+ydist*(t/(frames*accelerationtime))**2)))
 
 
 
-		xdist = self.start[0]-self.accelpoint2[0]
-		ydist = self.start[1]-self.accelpoint2[1]
-
-		for t in range(int(accelerationtime*frames)+1):	
-			self.drawlist.append(((self.accelpoint2[0]+xdist*(t/(frames*accelerationtime))**2),(self.accelpoint2[1]+ydist*(t/(frames*accelerationtime))**2)))
 
 		xparams = [self.start[0], self.stroke[0][0], self.stroke[1][0], self.stroke[2][0]]
 		yparams = [self.start[1], self.stroke[0][1], self.stroke[1][1], self.stroke[2][1]]
@@ -237,31 +239,61 @@ class path():
 		cuts = math.ceil(tot/(conversion*speed)*frames)
 
 		t1 = 0
-		for i in range(cuts):	
-			# print(i)
-			# print(tot/(conversion*speed)*frames)
-			t=i/cuts
-			# print(t)
-			ideal = tot/cuts
-			# print('\n\n\n\n')
-			# print(tot)
-			# print(ideal)
-			# print('\n\n\n\n')
-			t1 = length(ideal,xparams,yparams,t1)
-			# print(t1)
-			# print('')
+		rev = []
+		
+		if num == 1:
+			for i in range(cuts):	
+				t=i/(cuts)
 
-			x = ((1-t1)**3*(xparams[0]))+(3*(1-t1)**2*t1*(xparams[1]+xparams[0]))+(3*(1-t1)*t1**2*(xparams[2]+xparams[0]))+(t1**3*(xparams[3]+xparams[0]))
-			y = ((1-t1)**3*(yparams[0]))+(3*(1-t1)**2*t1*(yparams[1]+yparams[0]))+(3*(1-t1)*t1**2*(yparams[2]+yparams[0]))+(t1**3*(yparams[3]+yparams[0]))
-			self.drawlist.append((x, y))
-			# print(t1)
+				ideal = tot/(cuts)
+
+				t1 = length(ideal,xparams,yparams,t1,tot)
+
+				x = ((1-t1)**3*(xparams[0]))+(3*(1-t1)**2*t1*(xparams[1]+xparams[0]))+(3*(1-t1)*t1**2*(xparams[2]+xparams[0]))+(t1**3*(xparams[3]+xparams[0]))
+				y = ((1-t1)**3*(yparams[0]))+(3*(1-t1)**2*t1*(yparams[1]+yparams[0]))+(3*(1-t1)*t1**2*(yparams[2]+yparams[0]))+(t1**3*(yparams[3]+yparams[0]))
+				rev.append((x, y))
+			rev.reverse()
+		else:
+			for i in range(cuts):	
+				t=i/(cuts)
+
+				ideal = tot/(cuts)
+
+				t1 = length(ideal,xparams,yparams,t1,tot)
+
+				x = ((1-t1)**3*(xparams[0]))+(3*(1-t1)**2*t1*(xparams[1]+xparams[0]))+(3*(1-t1)*t1**2*(xparams[2]+xparams[0]))+(t1**3*(xparams[3]+xparams[0]))
+				y = ((1-t1)**3*(yparams[0]))+(3*(1-t1)**2*t1*(yparams[1]+yparams[0]))+(3*(1-t1)*t1**2*(yparams[2]+yparams[0]))+(t1**3*(yparams[3]+yparams[0]))
+				rev.append((x, y))
+
+		self.drawlist += rev
+
+
+		rev = []
+		if num == 2:
+			xdist = self.stroke[2][0]+self.start[0]-self.accelpoint1[0] 
+			ydist = self.stroke[2][1]+self.start[1]-self.accelpoint1[1]
+
+			for t in range(int(accelerationtime*frames)):	
+				rev.append(((self.accelpoint1[0]+xdist*(t/(frames*accelerationtime))**2),(self.accelpoint1[1]+ydist*(t/(frames*accelerationtime))**2)))
+			rev.reverse()
+			self.drawlist += rev
+			return self.drawlist
+		else:
+			xdist = self.start[0]-self.accelpoint2[0]
+			ydist = self.start[1]-self.accelpoint2[1]
+
+			for t in range(int(accelerationtime*frames)+1):	
+				rev.append(((self.accelpoint2[0]+xdist*(t/(frames*accelerationtime))**2),(self.accelpoint2[1]+ydist*(t/(frames*accelerationtime))**2)))
+			rev.reverse()
+			self.drawlist += rev
+			return self.drawlist
 
 
 
+		# for point in self.drawlist:
+		# 	pygame.draw.circle(gameDisplay, (50,255,0), (round(point[0]*scale), round(point[1]*scale)), 2)
 
-
-		for point in self.drawlist:
-			pygame.draw.circle(gameDisplay, (50,255,0), (round(point[0]*scale), round(point[1]*scale)), 2)
+		
 			
 
 
@@ -292,21 +324,103 @@ class line2():
 	def accelpoints(self):
 		xdist = math.sqrt((accelerationdist**2)/(1+self.slope**2))*conversion
 		ydist = math.sqrt((accelerationdist**2)/(1+(1/self.slope)**2))*conversion
-		# print(xdist,ydist)
-		if self.start[1][0] < self.start[0][0]:
-			pygame.draw.circle(gameDisplay, red, (round(self.start[0][0]-xdist)*scale, round(self.start[0][1]-ydist)*scale), 4)
-			pygame.draw.circle(gameDisplay, red, (round(self.start[1][0]+xdist)*scale, round(self.start[1][1]+ydist)*scale), 4)
-			self.accelpoint1 = ((self.start[0][0]-xdist),(self.start[0][1]-ydist))
-			self.accelpoint2 = ((self.start[1][0]+xdist),(self.start[1][1]+ydist))
+
+
+
+		if self.slope > 0:
+			if self.start[1][0]>self.start[0][0]:
+				pygame.draw.circle(gameDisplay, red, (round(self.start[0][0]-xdist)*scale, round(self.start[0][1]-ydist)*scale), 4)
+				pygame.draw.circle(gameDisplay, red, (round(self.start[1][0]+xdist)*scale, round(self.start[1][1]+ydist)*scale), 4)
+				self.accelpoint1 = ((self.start[0][0]-xdist),(self.start[0][1]-ydist))
+				self.accelpoint2 = ((self.start[1][0]+xdist),(self.start[1][1]+ydist))
+			else:
+				pygame.draw.circle(gameDisplay, red, (round(self.start[0][0]+xdist)*scale, round(self.start[0][1]+ydist)*scale), 4)
+				pygame.draw.circle(gameDisplay, red, (round(self.start[1][0]-xdist)*scale, round(self.start[1][1]-ydist)*scale), 4)
+				self.accelpoint1 = ((self.start[0][0]+xdist),(self.start[0][1]+ydist))
+				self.accelpoint2 = ((self.start[1][0]-xdist),(self.start[1][1]-ydist))
 		else:
-			pygame.draw.circle(gameDisplay, red, (round(self.start[1][0]+xdist)*scale, round(self.start[1][1]+ydist)*scale), 4)
-			pygame.draw.circle(gameDisplay, red, (round(self.start[0][0]-xdist)*scale, round(self.start[0][1]-ydist)*scale), 4)
-			self.accelpoint1 = ((self.start[1][0]+xdist),(self.start[1][1]+ydist))
-			self.accelpoint2 = ((self.start[0][0]-xdist),(self.start[0][1]-ydist))
+			if self.start[1][0]<self.start[0][0]:
+				pygame.draw.circle(gameDisplay, red, (round(self.start[1][0]-xdist)*scale, round(self.start[1][1]+ydist)*scale), 4)
+				pygame.draw.circle(gameDisplay, red, (round(self.start[0][0]+xdist)*scale, round(self.start[0][1]-ydist)*scale), 4)
+				self.accelpoint2 = ((self.start[1][0]-xdist),(self.start[1][1]+ydist))
+				self.accelpoint1 = ((self.start[0][0]+xdist),(self.start[0][1]-ydist))
+			else:
+				pygame.draw.circle(gameDisplay, red, (round(self.start[1][0]+xdist)*scale, round(self.start[1][1]-ydist)*scale), 4)
+				pygame.draw.circle(gameDisplay, red, (round(self.start[0][0]-xdist)*scale, round(self.start[0][1]+ydist)*scale), 4)
+				self.accelpoint2 = ((self.start[1][0]+xdist),(self.start[1][1]-ydist))
+				self.accelpoint1 = ((self.start[0][0]-xdist),(self.start[0][1]+ydist))
 
-	def points(self):
-		pass
+	def points(self,num):
+		self.drawlist = []	
 
+
+		if num == 2:
+			xdist = -self.start[1][0]+self.accelpoint2[0]
+			ydist = -self.start[1][1]+self.accelpoint2[1]
+
+			for t in range(int(accelerationtime*frames)+1):	
+				self.drawlist.append(((self.accelpoint2[0]-xdist*(t/(frames*accelerationtime))**2),(self.accelpoint2[1]-ydist*(t/(frames*accelerationtime))**2)))
+		else:
+			xdist = self.start[0][0]-self.accelpoint1[0]
+			ydist = self.start[0][1]-self.accelpoint1[1]
+
+			for t in range(int(accelerationtime*frames)):	
+				self.drawlist.append(((self.accelpoint1[0]+xdist*(t/(frames*accelerationtime))**2),(self.accelpoint1[1]+ydist*(t/(frames*accelerationtime))**2)))
+				pass
+
+
+		if num == 2:
+			xdist = self.start[1][0]-self.start[0][0]
+			ydist = self.start[1][1]-self.start[0][1]
+			x = self.start[0][0]
+			y = self.start[0][1]
+		else:
+			xdist = self.start[1][0]-self.start[0][0]
+			ydist = self.start[1][1]-self.start[0][1]
+			x = self.start[0][0]
+			y = self.start[0][1]
+
+		rev = []
+		length = math.sqrt((xdist)**2+(ydist)**2)
+		cuts = math.ceil(length/(conversion*speed)*frames)
+		stepx = xdist/cuts
+		stepy = ydist/cuts
+
+		
+
+		for t in range(cuts):
+			rev.append((x,y))
+			x += stepx
+			y += stepy
+
+		if num == 2:
+			rev.reverse()
+
+		self.drawlist += rev
+
+
+
+
+
+
+
+		rev = []
+		if num == 1:
+			xdist = self.start[1][0]-self.accelpoint2[0]
+			ydist = self.start[1][1]-self.accelpoint2[1]
+			
+			for t in range(int(accelerationtime*frames)+1):	
+				rev.append(((self.accelpoint2[0]+xdist*(t/(frames*accelerationtime))**2),(self.accelpoint2[1]+ydist*(t/(frames*accelerationtime))**2)))
+		else:
+			xdist = self.start[0][0]-self.accelpoint1[0]
+			ydist = self.start[0][1]-self.accelpoint1[1]
+
+			for t in range(int(accelerationtime*frames)):	
+				rev.append(((self.accelpoint1[0]+xdist*(t/(frames*accelerationtime))**2),(self.accelpoint1[1]+ydist*(t/(frames*accelerationtime))**2)))
+			
+		rev.reverse()
+		self.drawlist += rev
+		return self.drawlist
 		
 
 
@@ -317,7 +431,7 @@ class line2():
 f = open(filename,"r")
 
 file = f.read()
-# print(file, '\n\n')
+
 strokes = []
 
 
@@ -327,11 +441,8 @@ for name in names:
 	if name in file:
 		short = file
 		t = file.count(name)
-		# print(f'{t} {name} in svg')
 		for i in range(t):
 			short = short[short.find(name):]
-			# print(name)
-			# print(short)
 			if name == '<line':
 				strokes.append(line(short))	
 			if name == '<circle':
@@ -339,8 +450,7 @@ for name in names:
 			if name == '<ellipse':
 				strokes.append(ellipse(short))	
 			if name == '<path':
-				# print(short)
-				s = inside(short,short.find('d'))
+				s = inside(short,short.find('     d'))
 				if s.__contains__('c') or s.__contains__('C'):
 					strokes.append(path(short))	
 				else:
@@ -348,7 +458,7 @@ for name in names:
 
 
 			short = short[2:]
-	# print('\n')
+
 	
 			
 pygame.init()
@@ -378,34 +488,51 @@ def dist(thing, start):
 
 def closest(strokes, start):
 	best = 999999
-	# print(start)
 	for stroke in strokes:
 		bestdist = dist(stroke, start)
 		if bestdist[0] < best:
 			best = bestdist[0]
 			currstroke = stroke
 			strokenum=0
-			# print('better found:')
-			# print(stroke.accelpoint1)
-			# print(best,'\n')
 		if bestdist[1] < best:
 			best = bestdist[1]
 			currstroke = stroke
 			strokenum=1
-			# print('better found:')
-			# print(stroke.accelpoint2)
-			# print(best,'\n','\n')
 
 	return currstroke,strokenum
+
+def connect(start, end):
+	grrr=[]
+	length = math.sqrt((start[0]+end[0])**2+(start[1]+end[1])**2)
+	time = math.sqrt(length/(acceleration*conversion))
+
+	cuts = math.ceil(time*frames)
+	xdist = (end[0]-start[0])/2
+	ydist = (end[1]-start[1])/2
+
+
+
+	for t in range(cuts):
+		x = start[0] + xdist*(t/(cuts))**2
+		y = start[1] + ydist*(t/(cuts))**2
+		grrr.append((x,y))
+	rev = []
+	for t in range(cuts):
+		x = end[0] - xdist*(1-(t/(cuts)))**2
+		y = end[1] - ydist*(1-(t/(cuts)))**2
+		grrr.append((x,y))
+
+	return grrr
+
 
 
 #motion profiling
 conversion = 100 #px/m
-acceleration = 0.1 #m/s^2 = 0.1 #m/s
+acceleration = 1 #m/s^2 = 0.1 #m/s
 speed = 0.25
 accelerationtime = (speed/acceleration) #time needed to accelerate 1s
 accelerationdist = (1/2)*(acceleration)*(accelerationtime)**2 #distance needed to accelerate 0.1m
-frames = 4 #frames per second
+frames = 24 #frames per second
 
 
 
@@ -415,30 +542,35 @@ head(start)
 for stroke in strokes:
 	stroke.draw()
 	stroke.accelpoints()
-	stroke.points()
+
 
 # for stroke in strokes[30:40]:
 # 	stroke.points()
 
 
 
-
+number = len(strokes)
 strokeleft = strokes
 
-
-
+t=0
+pointslist = []
 while len(strokeleft)>0:
+	t+=1
 	current = closest(strokeleft, start)
 	strokeleft.remove(current[0])
 
+
 	if current[1] == 0:
-		# current[0].points(current[0].accelpoint2,current[0].accelpoint1)
 		pygame.draw.line(gameDisplay, green, (start[0]*scale,start[1]*scale), (current[0].accelpoint1[0]*scale,current[0].accelpoint1[1]*scale))
+		pointslist += connect(start, current[0].accelpoint1)
 		start = current[0].accelpoint2
+		pointslist += current[0].points(1)
 	else:
 		pygame.draw.line(gameDisplay, green, (start[0]*scale,start[1]*scale), (current[0].accelpoint2[0]*scale,current[0].accelpoint2[1]*scale))
-		# current[0].points(current[0].accelpoint1,current[0].accelpoint2)
+		pointslist += connect(start, current[0].accelpoint2)
 		start = current[0].accelpoint1
+		pointslist += current[0].points(2)
+	print(f'{t}/{number}')
 
 
 
@@ -446,14 +578,43 @@ while len(strokeleft)>0:
 
 
 
-# strokes[3].draw()
-# strokes[3].accelpoints()
 
 
-while True:
-	for event in pygame.event.get():
-		if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
-			pygame.quit()
-			quit()
-	pygame.display.update()
-	clock.tick(1000/frames)
+# t = 0
+# while True:
+# 	try:
+# 		pygame.draw.circle(gameDisplay, (50,255,0), (round(pointslist[t][0]*scale), round(pointslist[t][1]*scale)), 2)
+# 	except:
+# 		break
+
+# 	for event in pygame.event.get():
+# 		if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
+# 			pygame.quit()
+# 			quit()
+
+# 	pygame.display.update()
+# 	clock.tick(frames)
+# 	t+=1
+
+def pythag(point1,point2):
+	return math.sqrt((point1[0]-point2[0])**2+(point1[1]-point2[1])**2)
+
+speed = []
+velocity = []
+acceler = []
+prev = pointslist[0]
+for x in pointslist[1:]:
+	speed.append(abs(pythag(x,prev)/conversion*frames))
+	velocity.append(((x[0]-prev[0]),(x[1]-prev[1])))
+	prev = x
+
+prev = velocity[0]
+for x in velocity[1:]:
+	acceler.append(abs(pythag(x,prev)/conversion*frames**2))
+	prev = x
+
+
+# plt.plot(pointslist, 'b')
+plt.plot(speed, 'g')
+plt.plot(acceler, 'r')
+plt.show()
