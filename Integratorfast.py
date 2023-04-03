@@ -29,7 +29,7 @@ xparams = [53,128,24,156]
 yparams = [141,-125,25,2]
 
 
-SCALE = 100
+SCALE = 200*1
 
 def length(ideal,xparams,yparams,t1,total):
 	goog = total
@@ -38,7 +38,7 @@ def length(ideal,xparams,yparams,t1,total):
 	t=0
 
 	t = t1
-	for i in range(int(round(goog)*SCALE*(1-t1))):
+	for i in range(int(round(goog)*SCALE)):
 		xprev = ((1-t1)**3*(xparams[0]))+(3*(1-t1)**2*t1*(xparams[1]+xparams[0]))+(3*(1-t1)*t1**2*(xparams[2]+xparams[0]))+(t1**3*(xparams[3]+xparams[0]))
 		yprev = ((1-t1)**3*(yparams[0]))+(3*(1-t1)**2*t1*(yparams[1]+yparams[0]))+(3*(1-t1)*t1**2*(yparams[2]+yparams[0]))+(t1**3*(yparams[3]+yparams[0]))
 
@@ -58,10 +58,8 @@ def length(ideal,xparams,yparams,t1,total):
 		t1 = t
 		xprev = x
 		yprev = y
-	print('did a thing')
+	print('reached end')
 	return 1
-
-
 
 
 def totlength(xparams,yparams):
@@ -71,8 +69,8 @@ def totlength(xparams,yparams):
 	xprev = xparams[0]
 	yprev = yparams[0]
 
-	for i in range(round(goog)*SCALE*5):
-		t=i/(round(goog)*SCALE*5)
+	for i in range(round(goog)*SCALE):
+		t=i/(round(goog)*SCALE)
 		x = ((1-t)**3*(xparams[0]))+(3*(1-t)**2*t*(xparams[1]+xparams[0]))+(3*(1-t)*t**2*(xparams[2]+xparams[0]))+(t**3*(xparams[3]+xparams[0]))
 		y = ((1-t)**3*(yparams[0]))+(3*(1-t)**2*t*(yparams[1]+yparams[0]))+(3*(1-t)*t**2*(yparams[2]+yparams[0]))+(t**3*(yparams[3]+yparams[0]))
 
@@ -80,6 +78,7 @@ def totlength(xparams,yparams):
 
 		xprev = x
 		yprev = y
+
 
 	return length
 
