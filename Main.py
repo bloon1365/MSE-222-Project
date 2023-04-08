@@ -5,6 +5,7 @@ from Integratorfast import *
 import matplotlib.pyplot as plt
 
 
+
 #line
 #circle
 #ellipse
@@ -15,13 +16,13 @@ names = ['<line', '<circle', '<ellipse', '<path']
 
 path = os.path.dirname(__file__)
 # filename = path + "/test2.svg"
-filename = path + "/test3.svg"
+filename = path + "/test4.svg"
 
 
 def inside(string, value):
 	flag = False
 	num = ''
-	for i in string[value:-1]:
+	for i in string[value+2:-1]:
 		if flag == False:
 			if i == '"':
 				flag = True
@@ -36,10 +37,7 @@ def point(string):
 	num1 = ''
 	num2 = ''
 	flag = False
-	# print(string)
 	for i in string:
-		# print(i)
-		# print(num1,num2)
 		if i == ' ' or i == ',':
 			if flag == True:
 				return (float(num1),float(num2))
@@ -68,7 +66,6 @@ def pointsabs(string):
 	while True:
 		if len(string) < 3:
 			pointslist[1] = (pointslist[1][0]-pointslist[0][0],pointslist[1][1]-pointslist[0][1])
-			pointslist[2] = (pointslist[2][0]-pointslist[3][0],pointslist[2][1]-pointslist[3][1])
 			return pointslist
 		pointslist.append(point(string))
 
@@ -83,7 +80,7 @@ def pathinside(string):
 	value = 0
 	goose = ['m','c','s','z']
 	for i in string:
-		if i == 'm' or i == 'M':
+		if i == 'M' or i =='m':
 			strokes.append(point(string[value+2:]))
 		if i == 'c':
 			strokes.append(points(string[value+2:]+' '))
@@ -120,24 +117,9 @@ class line():
 			pygame.draw.circle(gameDisplay, black, (round(x), round(y)), 2)
 
 
-class circle():
-	def __init__ (self,string):
-		self.cx = inside(string,string.find('cx'))
-		self.cy = inside(string,string.find('cy'))
-		self.r = inside(string,string.find('r'))
-		# print(self.cx,self.cy,self.r)
-
-class ellipse():
-	def __init__ (self,string):
-		self.cx = inside(string,string.find('cx'))
-		self.cy = inside(string,string.find('cy'))
-		self.rx = inside(string,string.find('rx'))
-		self.ry = inside(string,string.find('ry'))
-		# print(self.cx,self.cy,self.rx,self.ry)
-
 class path():
 	def __init__ (self,string):
-		self.stuff = inside(string,string.find('d'))
+		self.stuff = inside(string,string.find(' d='))
 		# print(self.stuff)
 		temp = pathinside(self.stuff)
 		self.start = temp[0]
@@ -299,9 +281,10 @@ class path():
 
 class line2():
 	def __init__ (self,string):
-		self.stuff = inside(string,string.find('d'))
+		self.stuff = inside(string,string.find(' d='))
 		self.start = points(self.stuff[2:]+' ')
-		# print(self.start)
+		if self.stuff.__contains__('m'):
+			self.start[1] = (self.start[0][0] + self.start[1][0],self.start[0][1] + self.start[1][1])
 
 		self.slope = (self.start[1][1]-self.start[0][1])/(self.start[1][0]-self.start[0][0])
 
@@ -323,7 +306,6 @@ class line2():
 	def accelpoints(self):
 		xdist = math.sqrt((accelerationdist**2)/(1+self.slope**2))*conversion
 		ydist = math.sqrt((accelerationdist**2)/(1+(1/self.slope)**2))*conversion
-
 
 
 		if self.slope > 0:
@@ -422,35 +404,10 @@ file = f.read()
 strokes = []
 
 
-
-
-for name in names:
-	if name in file:
-		short = file
-		t = file.count(name)
-		for i in range(t):
-			short = short[short.find(name):]
-			if name == '<line':
-				strokes.append(line(short))	
-			if name == '<circle':
-				strokes.append(circle(short))	
-			if name == '<ellipse':
-				strokes.append(ellipse(short))	
-			if name == '<path':
-				s = inside(short,short.find('     d'))
-				if s.__contains__('c') or s.__contains__('C'):
-					strokes.append(path(short))	
-				else:
-					strokes.append(line2(short))	
-
-
-			short = short[2:]
-
-
 pygame.init()
 
-scale = 3
-display_width = 16*25*scale
+scale = 5
+display_width = 9*25*scale
 display_height = 9*25*scale
 
 gameDisplay = pygame.display.set_mode((display_width, display_height))
@@ -463,6 +420,30 @@ green = (0,255,0)
 
 gameDisplay.fill(white)
 clock = pygame.time.Clock()
+
+
+
+
+for name in names:
+	if name in file:
+		short = file
+		t = file.count(name)
+		for i in range(t):
+			short = short[short.find(name):]
+			if name == '<line':
+				strokes.append(line(short))		
+			if name == '<path':
+				# print()
+				s = inside(short,short.find(' d='))
+				if s.__contains__('c') or s.__contains__('C'):
+					strokes.append(path(short))	
+				else:
+					strokes.append(line2(short))	
+
+
+			short = short[4:]
+
+
 
 def head(point):
 	pygame.draw.circle(gameDisplay, red, (round(point[0])*scale, round(point[1])*scale), 10)
@@ -488,7 +469,7 @@ def closest(strokes, start):
 def connect(start, end):
 	grrr=[]
 	length = math.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
-	time = math.sqrt(length/(acceleration*conversion))
+	time = math.sqrt(length/((acceleration*0.25)*conversion))
 
 	cuts = math.ceil(time*frames)
 	xdist = (end[0]-start[0])/2
@@ -508,14 +489,27 @@ def connect(start, end):
 
 	return grrr
 
+#motion profiling
+conversion = 100 #px/m
+acceleration = 1 #m/s^2
+speed = 0.1 #m/s
+accelerationtime = (speed/acceleration) #time needed to accelerate 1s
+accelerationdist = (1/2)*(acceleration)*(accelerationtime)**2 #distance needed to accelerate 0.1m
+frames = 60 #frames per second
+
+
+
 correction = 0
 prevangle = 0
-def drawarms(x,y):
+
+arm1 = 0.6*conversion
+arm2 = 0.45*conversion
+origin = ((arm1+arm2),(arm1+arm2))
+
+def calcarms(x,y):
 	global correction
 	global prevangle
-	arm1 = 0.75*conversion
-	arm2 = 0.75*conversion
-	origin = (150,100)
+
 	x = x - origin[0]
 	y = y - origin[1]
 
@@ -531,41 +525,43 @@ def drawarms(x,y):
 
 	#jump detector **VERY BAD**
 	theta1 += correction
-	if abs(theta1-prevangle) > math.pi - 0.5:
+	if theta1-prevangle > math.pi - 0.5:
 		correction -= math.pi
 		theta1 -= math.pi
+	if theta1-prevangle < -math.pi + 0.5:
+		correction += math.pi
+		theta1 += math.pi
 
 	prevangle = theta1
 
+	return theta1, theta2
 
+
+def drawarms(theta1,theta2):
 	point1 = (origin[0]-arm1*math.cos(theta1),origin[1]-arm1*math.sin(theta1))
 	point2 = (point1[0]-arm2*math.cos(theta2+theta1),point1[1]-arm2*math.sin(theta2+theta1))
 
 
-
-
-	pygame.draw.line(gameDisplay, green, (origin[0]*scale,origin[1]*scale), (point1[0]*scale,point1[1]*scale))
-	pygame.draw.line(gameDisplay, green, (point1[0]*scale,point1[1]*scale), (point2[0]*scale,point2[1]*scale))
-
+	pygame.draw.line(gameDisplay, (25,25,25), (origin[0]*scale,origin[1]*scale), (point1[0]*scale,point1[1]*scale),3)
+	pygame.draw.line(gameDisplay, (25,25,25), (point1[0]*scale,point1[1]*scale), (point2[0]*scale,point2[1]*scale),3)
 
 
 
-#motion profiling
-conversion = 100 #px/m
-acceleration = 0.75 #m/s^2 = 0.1 #m/s
-speed = 0.25
-accelerationtime = (speed/acceleration) #time needed to accelerate 1s
-accelerationdist = (1/2)*(acceleration)*(accelerationtime)**2 #distance needed to accelerate 0.1m
-frames = 24 #frames per second
 
 
 
-start = (100,100)
+
+
+start = (origin[0],origin[1]-arm1)
 head(start)
 
+gameDisplay.fill(white)
 for stroke in strokes:
 	stroke.accelpoints()
+	# clock.tick(frames)
 	# stroke.draw()
+	# pygame.display.update()
+	
 	
 
 
@@ -601,7 +597,33 @@ while len(strokeleft)>0:
 
 
 
+angle1list = []
+angle2list = []
+
 putlist = []
+
+
+for point in pointslist:
+	if point == (None,None):
+		angle1list.append(None)
+		angle2list.append(None)
+		continue
+	angles = calcarms(point[0],point[1])
+	angle1list.append(angles[0])
+	angle2list.append(angles[1])
+
+flag = False
+while True:
+	for event in pygame.event.get():
+		if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
+			flag = True
+	pygame.display.update()
+	clock.tick(frames)
+	gameDisplay.fill(white)
+	if flag == True:
+		break
+
+i=0
 flag = False
 for point in pointslist:
 	if point == (None,None):
@@ -609,14 +631,20 @@ for point in pointslist:
 			flag = False
 		else:
 			flag = True
+		i+=1
 		continue
 	if flag == True:
 		putlist.append(point)
-	pygame.draw.circle(gameDisplay, (0,0,0), (point[0]*scale, point[1]*scale), 8)
-	drawarms(point[0],point[1])
+		pygame.draw.circle(gameDisplay, (255,0,0), (point[0]*scale, point[1]*scale), 8)
+	else:
+		pygame.draw.circle(gameDisplay, (0,0,0), (point[0]*scale, point[1]*scale), 8)
+	drawarms(angle1list[i],angle2list[i])
 
-	for t in putlist:
-		pygame.draw.circle(gameDisplay, (50,255,0), (t[0]*scale, t[1]*scale), 2)
+	for t in putlist[::5]:
+		pygame.draw.circle(gameDisplay, (0,0,0), (t[0]*scale, t[1]*scale), 2)
+
+	pygame.draw.circle(gameDisplay, (0,0,0), (origin[0]*scale,origin[1]*scale), (arm2+arm1)*scale, 2)
+	pygame.draw.circle(gameDisplay, (0,0,0), (origin[0]*scale,origin[1]*scale), (arm1-arm2)*scale, 2)
 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
@@ -624,8 +652,9 @@ for point in pointslist:
 			quit()
 
 	pygame.display.update()
-	clock.tick(frames)
+	clock.tick(frames*10)
 	gameDisplay.fill(white)
+	i+=1
 
 
 
@@ -650,7 +679,87 @@ for x in velocity[1:]:
 	prev = x
 
 
-# plt.plot(pointslist, 'b')
-plt.plot(speed, 'g')
-plt.plot(acceler, 'r')
+angle1velocity = []
+angle1acceleration = []
+
+prev = angle1list[0]
+for x in angle1list[1:]:
+	if x == None:
+		continue
+	angle1velocity.append((x-prev)*frames)
+	prev = x
+
+prev = angle1velocity[0]
+for x in angle1velocity[1:]:
+	angle1acceleration.append((x-prev)*frames)
+	prev = x
+
+
+angle2velocity = []
+angle2acceleration = []
+
+prev = angle2list[0]
+for x in angle2list[1:]:
+	if x == None:
+		continue
+	angle2velocity.append((x-prev)*frames)
+	prev = x
+
+prev = angle2velocity[0]
+for x in angle2velocity[1:]:
+	angle2acceleration.append((x-prev)*frames)
+	prev = x
+
+m1=6.823 #kg
+m2=1.077 #kg
+L1=0.6 #m
+L2=0.45 #m
+
+t=0
+torque1 = []
+torque2 = []
+while t < len(angle1acceleration):
+	Theta1 = angle1list[t]
+	dTheta1 = angle1velocity[t]
+	ddTheta1 = angle1acceleration[t]
+	Theta2 = angle2list[t]
+	dTheta2 = angle2velocity[t]
+	ddTheta2 = angle2acceleration[t]
+	if Theta1 == None:
+		t+=1
+		continue
+
+	T1 = (m1*L1**2 + m2*L1**2 + m2*L2**2 + 2*m2*L1*L2*math.cos(Theta2))*ddTheta1 + (m2*L2*L1*math.cos(Theta2) + m2*L2**2)*ddTheta2 - m2*L1*L2*math.sin(Theta2)*(dTheta2**2+2*dTheta1*ddTheta2)
+	T2 = m2*L2**2*ddTheta2 + m2*L2*(L2+L1*math.cos(Theta2))*ddTheta1+m2*L1*L2*math.sin(Theta2)*dTheta1**2
+
+	torque1.append(T1)
+	torque2.append(T2)
+	t+=1
+
+
+	
+
+figure, graph = plt.subplots(2,2)
+
+graph[0,1].plot(angle1list, 'g')
+graph[0,1].plot(angle2list, 'r')
+graph[0,1].set_title("Angle")
+
+graph[1,0].plot(angle1velocity, 'g')
+graph[1,0].plot(angle2velocity, 'r')
+graph[1,0].set_title("Angular Velocity")
+
+# graph[1,1].plot(angle1acceleration, 'g')
+# graph[1,1].plot(angle2acceleration, 'r')
+# graph[1,1].set_title("Angular Acceleration")
+
+
+graph[1,1].plot(torque1, 'g')
+graph[1,1].plot(torque2, 'r')
+graph[1,1].set_title("Torque")
+
+
+graph[0,0].plot(speed, 'g')
+graph[0,0].plot(acceler, 'r')
+graph[0,0].set_title("Tip Speed & Acceleration")
 plt.show()
