@@ -11,7 +11,7 @@ xparams = [53,128,24,156]
 yparams = [141,-125,25,2]
 
 
-SCALE = 200*32
+SCALE = 200*16
 
 def length(ideal,xparams,yparams,t1,total):
 	goog = total

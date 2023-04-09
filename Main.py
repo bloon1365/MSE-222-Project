@@ -6,17 +6,12 @@ import matplotlib.pyplot as plt
 
 
 
-#line
-#circle
-#ellipse
-#path (bezier and everything)
-#poly line
+#SVG Decoder, takes svg and extracts Cubic Bezier curves and lines, Irrelevant to project
 
 names = ['<line', '<circle', '<ellipse', '<path']
 
 path = os.path.dirname(__file__)
-# filename = path + "/test2.svg"
-filename = path + "/test4.svg"
+filename = path + "/test5.svg"
 
 
 def inside(string, value):
@@ -93,7 +88,8 @@ def pathinside(string):
 		value +=1
 	return strokes
 
-
+#stroke classes, functions include drawing for bug testing, calculating acceleration points 
+#and giving lists of position/time
 class line():
 	def __init__ (self,string):
 		self.x1 = float(inside(string,string.find('x1')))
@@ -266,19 +262,6 @@ class path():
 			self.drawlist += rev
 			return self.drawlist
 
-
-
-		# for point in self.drawlist:
-		# 	pygame.draw.circle(gameDisplay, (50,255,0), (round(point[0]*scale), round(point[1]*scale)), 2)
-
-		
-			
-
-
-
-
-
-
 class line2():
 	def __init__ (self,string):
 		self.stuff = inside(string,string.find(' d='))
@@ -396,14 +379,14 @@ class line2():
 
 
 
-
+#reading SVG
 f = open(filename,"r")
 
 file = f.read()
 
 strokes = []
 
-
+#initialization of window
 pygame.init()
 
 scale = 5
@@ -423,7 +406,7 @@ clock = pygame.time.Clock()
 
 
 
-
+#SVG Decoding
 for name in names:
 	if name in file:
 		short = file
@@ -444,13 +427,17 @@ for name in names:
 			short = short[4:]
 
 
+#function to help with motion path
 
+#draw end effector
 def head(point):
 	pygame.draw.circle(gameDisplay, red, (round(point[0])*scale, round(point[1])*scale), 10)
 
+#distance between 2 points
 def dist(thing, start):
 	return (math.sqrt((thing.accelpoint1[0]-start[0])**2+(thing.accelpoint1[1]-start[1])**2), math.sqrt((thing.accelpoint2[0]-start[0])**2+(thing.accelpoint2[1]-start[1])**2))
 
+#find closets acceration point
 def closest(strokes, start):
 	best = 999999
 	for stroke in strokes:
@@ -466,6 +453,7 @@ def closest(strokes, start):
 
 	return currstroke,strokenum
 
+#connects 2 acceleration points with a list of positions/time
 def connect(start, end):
 	grrr=[]
 	length = math.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
@@ -498,7 +486,7 @@ accelerationdist = (1/2)*(acceleration)*(accelerationtime)**2 #distance needed t
 frames = 60 #frames per second
 
 
-
+#calculates angle from (x,y) coordinates
 correction = 0
 prevangle = 0
 
@@ -536,7 +524,7 @@ def calcarms(x,y):
 
 	return theta1, theta2
 
-
+#draws arms
 def drawarms(theta1,theta2):
 	point1 = (origin[0]-arm1*math.cos(theta1),origin[1]-arm1*math.sin(theta1))
 	point2 = (point1[0]-arm2*math.cos(theta2+theta1),point1[1]-arm2*math.sin(theta2+theta1))
@@ -551,8 +539,9 @@ def drawarms(theta1,theta2):
 
 
 
-
+#inital end effector position
 start = (origin[0],origin[1]-arm1)
+startpoint = start
 head(start)
 
 gameDisplay.fill(white)
@@ -590,6 +579,8 @@ while len(strokeleft)>0:
 		start = current[0].accelpoint1
 		pointslist += current[0].points(2)
 	print(f'{t}/{number}')
+
+pointslist += connect(pointslist[-1], startpoint)
 
 
 
@@ -741,17 +732,17 @@ while t < len(angle1acceleration):
 
 figure, graph = plt.subplots(2,2)
 
-graph[0,1].plot(angle1list, 'g')
-graph[0,1].plot(angle2list, 'r')
-graph[0,1].set_title("Angle")
+# graph[0,1].plot(angle1list, 'g')
+# graph[0,1].plot(angle2list, 'r')
+# graph[0,1].set_title("Angle")
 
 graph[1,0].plot(angle1velocity, 'g')
 graph[1,0].plot(angle2velocity, 'r')
 graph[1,0].set_title("Angular Velocity")
 
-# graph[1,1].plot(angle1acceleration, 'g')
-# graph[1,1].plot(angle2acceleration, 'r')
-# graph[1,1].set_title("Angular Acceleration")
+graph[0,1].plot(angle1acceleration, 'g')
+graph[0,1].plot(angle2acceleration, 'r')
+graph[0,1].set_title("Angular Acceleration")
 
 
 graph[1,1].plot(torque1, 'g')
