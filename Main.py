@@ -3,17 +3,18 @@ import pygame
 import math
 from Integratorfast import *
 import matplotlib.pyplot as plt
+import time
 
 
 
-#SVG Decoder, takes svg and extracts Cubic Bezier curves and lines, Irrelevant to project
+#SVG Decoder, takes svg and extracts Cubic Bezier curves and lines
 
 names = ['<line', '<circle', '<ellipse', '<path']
 
 path = os.path.dirname(__file__)
 filename = path + "/test5.svg"
 
-
+#finds string inside of quotation marks
 def inside(string, value):
 	flag = False
 	num = ''
@@ -26,6 +27,7 @@ def inside(string, value):
 				return num
 			num += i
 
+#finds point separated by spaces or commas
 def point(string):
 	global chicken 
 	chicken = 0
@@ -44,6 +46,7 @@ def point(string):
 				num2 += i
 		chicken += 1
 
+#finds points separated by spaces or commas
 def points(string):
 	yup = [1,2,3,4,5,6,7,8,9,0,'-']
 	pointslist = []
@@ -55,6 +58,7 @@ def points(string):
 
 		string = string[chicken+1:]
 
+#finds points separated by spaces or commas in absolute terms
 def pointsabs(string):
 	yup = [1,2,3,4,5,6,7,8,9,0,'-']
 	pointslist = []
@@ -69,7 +73,7 @@ def pointsabs(string):
 		
 
 
-
+#Finds key letters in SVG identifying types of curves
 def pathinside(string):
 	strokes = []
 	value = 0
@@ -90,29 +94,6 @@ def pathinside(string):
 
 #stroke classes, functions include drawing for bug testing, calculating acceleration points 
 #and giving lists of position/time
-class line():
-	def __init__ (self,string):
-		self.x1 = float(inside(string,string.find('x1')))
-		self.y1 = float(inside(string,string.find('y1')))
-		self.x2 = float(inside(string,string.find('x2')))
-		self.y2 = float(inside(string,string.find('y2')))
-		# print(self.x1,self.y1,self.x2,self.y2)
-
-		self.slope = (self.x2-self.x1)/(self.y2-self.y1)
-		self.intercept = self.y1 - self.slope*self.x1
-
-	def draw(self):
-		slopex = self.x2-self.x1
-		slopey = self.y2-self.y1
-		length = math.sqrt((self.x2-self.x1)**2+(self.y2-self.y1)**2)
-		x=self.x1*scale
-		y=self.y1*scale
-		for i in range(round(length)*scale):
-			x+=slopex/length
-			y+=slopey/length
-			pygame.draw.circle(gameDisplay, black, (round(x), round(y)), 2)
-
-
 class path():
 	def __init__ (self,string):
 		self.stuff = inside(string,string.find(' d='))
@@ -122,6 +103,7 @@ class path():
 		self.stroke = temp[1]
 		# print(self.stroke)
 
+	#draws curve, used for debugging
 	def draw(self):
 		length= math.sqrt((self.stroke[0][0]-self.stroke[-1][0])**2+(self.stroke[0][1]-self.stroke[-1][1])**2)
 
@@ -134,7 +116,9 @@ class path():
 		pygame.draw.circle(gameDisplay, red, (self.accelpoint1[0]*scale, self.accelpoint1[1]*scale), 4)
 		pygame.draw.circle(gameDisplay, red, (self.accelpoint2[0]*scale, self.accelpoint2[1]*scale), 4)
 
+	#calculates Acceleration points
 	def accelpoints(self):
+		#finds slope to know direction of offset
 		slope1x = (3*(self.stroke[2][0]-self.stroke[1][0]))
 		slope1y = (3*(self.stroke[2][1]-self.stroke[1][1]))
 		try:
@@ -165,7 +149,7 @@ class path():
 			ydist2 = math.sqrt((accelerationdist**2)/(1+(999999999)**2))*conversion
 
 
-
+		#resolves quadrants
 		if slope1x >= 0 and slope1y >= 0:
 			self.accelpoint1 = ((self.stroke[2][0]+self.start[0]+xdist1), (self.stroke[2][1]+self.start[1]+ydist1))
 		if slope1x <= 0 and slope1y >= 0:
@@ -185,10 +169,11 @@ class path():
 			self.accelpoint2 = ((self.start[0]-xdist2), (self.start[1]+ydist2))
 		# self.accelpoint2 = (0, 0)
 
+	#returns a list of points from accelerationpoint 1 to acceleration point 2 of position vs time
 	def points(self, num):
 		self.drawlist = []	
 
-
+		#accelpoint 1 to start of curve
 		if num == 1:
 			xdist = self.stroke[2][0]+self.start[0]-self.accelpoint1[0] 
 			ydist = self.stroke[2][1]+self.start[1]-self.accelpoint1[1]
@@ -202,7 +187,7 @@ class path():
 			for t in range(int(accelerationtime*frames)+1):	
 				self.drawlist.append(((self.accelpoint2[0]+xdist*(t/(frames*accelerationtime))**2),(self.accelpoint2[1]+ydist*(t/(frames*accelerationtime))**2)))
 
-
+		#start of curve to end of curve
 		self.drawlist.append((None,None))
 
 		xparams = [self.start[0], self.stroke[0][0], self.stroke[1][0], self.stroke[2][0]]
@@ -242,6 +227,7 @@ class path():
 
 		self.drawlist.append((None,None))
 
+		#end of curve to accelpoint 2
 		rev = []
 		if num == 2:
 			xdist = self.stroke[2][0]+self.start[0]-self.accelpoint1[0] 
@@ -271,6 +257,7 @@ class line2():
 
 		self.slope = (self.start[1][1]-self.start[0][1])/(self.start[1][0]-self.start[0][0])
 
+	#draws curve, used for debugging
 	def draw(self):
 		slopex = self.start[1][0]-self.start[0][0]
 		slopey = self.start[1][1]-self.start[0][1]
@@ -286,11 +273,13 @@ class line2():
 		pygame.draw.circle(gameDisplay, red, (self.accelpoint1[0]*scale, self.accelpoint1[1]*scale), 4)
 		pygame.draw.circle(gameDisplay, red, (self.accelpoint2[0]*scale, self.accelpoint2[1]*scale), 4)
 
+	#calculates Acceleration points
 	def accelpoints(self):
+		#finds slope to know direction of offset
 		xdist = math.sqrt((accelerationdist**2)/(1+self.slope**2))*conversion
 		ydist = math.sqrt((accelerationdist**2)/(1+(1/self.slope)**2))*conversion
 
-
+		#resolves quadrants
 		if self.slope > 0:
 			if self.start[1][0]>self.start[0][0]:
 				self.accelpoint1 = ((self.start[0][0]-xdist),(self.start[0][1]-ydist))
@@ -306,9 +295,9 @@ class line2():
 				self.accelpoint2 = ((self.start[1][0]+xdist),(self.start[1][1]-ydist))
 				self.accelpoint1 = ((self.start[0][0]-xdist),(self.start[0][1]+ydist))
 
+	#returns a list of points from accelerationpoint 1 to acceleration point 2 of position vs time
 	def points(self,num):
 		self.drawlist = []	
-
 
 		if num == 2:
 			xdist = -self.start[1][0]+self.accelpoint2[0]
@@ -326,6 +315,7 @@ class line2():
 
 		self.drawlist.append((None,None))
 
+		#accelpoint 1 to start of curve
 		if num == 2:
 			xdist = self.start[1][0]-self.start[0][0]
 			ydist = self.start[1][1]-self.start[0][1]
@@ -337,6 +327,7 @@ class line2():
 			x = self.start[0][0]
 			y = self.start[0][1]
 
+		#start of curve to end of curve
 		rev = []
 		length = math.sqrt((xdist)**2+(ydist)**2)
 		cuts = math.ceil(length/(conversion*speed)*frames)
@@ -356,6 +347,7 @@ class line2():
 
 		self.drawlist.append((None,None))
 
+		#end of curve to accelpoint 2
 		rev = []
 		if num == 1:
 			xdist = self.start[1][0]-self.accelpoint2[0]
@@ -389,9 +381,12 @@ strokes = []
 #initialization of window
 pygame.init()
 
-scale = 5
-display_width = 9*25*scale
-display_height = 9*25*scale
+scale = 4
+# display_width = 9*25*scale
+# display_height = 9*25*scale
+
+display_width = (0.6+0.45)*100*scale*2
+display_height = (0.6+0.45)*100*scale*2
 
 gameDisplay = pygame.display.set_mode((display_width, display_height))
 pygame.display.set_caption('yessir')
@@ -511,7 +506,7 @@ def calcarms(x,y):
 	k2 = x*(arm2*math.cos(theta2)+arm1)+y*arm2*math.sin(theta2)
 	theta1 = math.atan(k1/k2)
 
-	#jump detector **VERY BAD**
+	#jump detector
 	theta1 += correction
 	if theta1-prevangle > math.pi - 0.5:
 		correction -= math.pi
@@ -543,13 +538,11 @@ def drawarms(theta1,theta2):
 start = (origin[0],origin[1]-arm1)
 startpoint = start
 head(start)
-
 gameDisplay.fill(white)
+#Calculate Accelpoints
 for stroke in strokes:
 	stroke.accelpoints()
-	# clock.tick(frames)
-	# stroke.draw()
-	# pygame.display.update()
+
 	
 	
 
@@ -560,6 +553,7 @@ for stroke in strokes:
 number = len(strokes)
 strokeleft = strokes
 
+#Use all of above functions and calculate entire path
 t=0
 pointslist = []
 while len(strokeleft)>0:
@@ -567,14 +561,13 @@ while len(strokeleft)>0:
 	current = closest(strokeleft, start)
 	strokeleft.remove(current[0])
 
-
 	if current[1] == 0:
-		# pygame.draw.line(gameDisplay, green, (start[0]*scale,start[1]*scale), (current[0].accelpoint1[0]*scale,current[0].accelpoint1[1]*scale))
+		pygame.draw.line(gameDisplay, green, (start[0]*scale,start[1]*scale), (current[0].accelpoint1[0]*scale,current[0].accelpoint1[1]*scale))
 		pointslist += connect(start, current[0].accelpoint1)
 		start = current[0].accelpoint2
 		pointslist += current[0].points(1)
 	else:
-		# pygame.draw.line(gameDisplay, green, (start[0]*scale,start[1]*scale), (current[0].accelpoint2[0]*scale,current[0].accelpoint2[1]*scale))
+		pygame.draw.line(gameDisplay, green, (start[0]*scale,start[1]*scale), (current[0].accelpoint2[0]*scale,current[0].accelpoint2[1]*scale))
 		pointslist += connect(start, current[0].accelpoint2)
 		start = current[0].accelpoint1
 		pointslist += current[0].points(2)
@@ -586,14 +579,12 @@ pointslist += connect(pointslist[-1], startpoint)
 
 
 
-
-
 angle1list = []
 angle2list = []
 
 putlist = []
 
-
+#create a list of angles for arms
 for point in pointslist:
 	if point == (None,None):
 		angle1list.append(None)
@@ -603,6 +594,7 @@ for point in pointslist:
 	angle1list.append(angles[0])
 	angle2list.append(angles[1])
 
+#wait for user input to start, for recording video
 flag = False
 while True:
 	for event in pygame.event.get():
@@ -614,15 +606,17 @@ while True:
 	if flag == True:
 		break
 
+#simulation
 i=0
 flag = False
-for point in pointslist:
-	if point == (None,None):
+simspeed = 3
+for point in pointslist[::simspeed]:
+	if pointslist[i-simspeed+1:i+1].__contains__((None,None)):
 		if flag == True:
 			flag = False
 		else:
 			flag = True
-		i+=1
+		i+=simspeed
 		continue
 	if flag == True:
 		putlist.append(point)
@@ -631,7 +625,7 @@ for point in pointslist:
 		pygame.draw.circle(gameDisplay, (0,0,0), (point[0]*scale, point[1]*scale), 8)
 	drawarms(angle1list[i],angle2list[i])
 
-	for t in putlist[::5]:
+	for t in putlist:
 		pygame.draw.circle(gameDisplay, (0,0,0), (t[0]*scale, t[1]*scale), 2)
 
 	pygame.draw.circle(gameDisplay, (0,0,0), (origin[0]*scale,origin[1]*scale), (arm2+arm1)*scale, 2)
@@ -643,16 +637,14 @@ for point in pointslist:
 			quit()
 
 	pygame.display.update()
-	clock.tick(frames*10)
+	clock.tick(frames*simspeed)
 	gameDisplay.fill(white)
-	i+=1
-
-
-
+	i+=simspeed
 
 def pythag(point1,point2):
 	return math.sqrt((point1[0]-point2[0])**2+(point1[1]-point2[1])**2)
 
+#discrete time differentiation for angular velocity, angular acceleration, velocity, and acceleration
 speed = []
 velocity = []
 acceler = []
@@ -706,6 +698,7 @@ m2=1.077 #kg
 L1=0.6 #m
 L2=0.45 #m
 
+#calculate torques
 t=0
 torque1 = []
 torque2 = []
@@ -729,7 +722,7 @@ while t < len(angle1acceleration):
 
 
 	
-
+#show graphs
 figure, graph = plt.subplots(2,2)
 
 # graph[0,1].plot(angle1list, 'g')

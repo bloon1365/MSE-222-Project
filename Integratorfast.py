@@ -1,8 +1,3 @@
-import scipy.integrate as integrate
-import scipy.special as special
-from scipy import optimize
-# import pygame
-
 from numpy import sqrt
 
 t = 1
@@ -11,7 +6,7 @@ xparams = [53,128,24,156]
 yparams = [141,-125,25,2]
 
 
-SCALE = 200*16
+SCALE = 200*32
 
 def length(ideal,xparams,yparams,t1,total):
 	goog = total
