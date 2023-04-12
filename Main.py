@@ -12,7 +12,7 @@ import time
 names = ['<line', '<circle', '<ellipse', '<path']
 
 path = os.path.dirname(__file__)
-filename = path + "/test5.svg"
+filename = path + "/drawing-1.svg"
 
 #finds string inside of quotation marks
 def inside(string, value):
@@ -29,8 +29,8 @@ def inside(string, value):
 
 #finds point separated by spaces or commas
 def point(string):
-	global chicken 
-	chicken = 0
+	global ids 
+	ids = 0
 	num1 = ''
 	num2 = ''
 	flag = False
@@ -44,7 +44,7 @@ def point(string):
 				num1 += i
 			else:
 				num2 += i
-		chicken += 1
+		ids += 1
 
 #finds points separated by spaces or commas
 def points(string):
@@ -56,7 +56,7 @@ def points(string):
 		pointslist.append(point(string))
 
 
-		string = string[chicken+1:]
+		string = string[ids+1:]
 
 #finds points separated by spaces or commas in absolute terms
 def pointsabs(string):
@@ -69,7 +69,7 @@ def pointsabs(string):
 		pointslist.append(point(string))
 
 
-		string = string[chicken+1:]
+		string = string[ids+1:]
 		
 
 
@@ -77,7 +77,6 @@ def pointsabs(string):
 def pathinside(string):
 	strokes = []
 	value = 0
-	goose = ['m','c','s','z']
 	for i in string:
 		if i == 'M' or i =='m':
 			strokes.append(point(string[value+2:]))

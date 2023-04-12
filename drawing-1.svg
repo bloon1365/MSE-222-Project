@@ -24,12 +24,12 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="2.1089995"
-     inkscape:cx="316.02662"
-     inkscape:cy="423.89767"
-     inkscape:window-width="1920"
-     inkscape:window-height="1017"
-     inkscape:window-x="1592"
+     inkscape:zoom="1.0544998"
+     inkscape:cx="397.81897"
+     inkscape:cy="175.43864"
+     inkscape:window-width="1600"
+     inkscape:window-height="837"
+     inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
      inkscape:current-layer="layer1" />
@@ -41,15 +41,15 @@
      id="layer1">
     <path
        style="fill:none;stroke:#000000;stroke-width:0.264583"
-       d="M 54.64516,132.35484 78.774194,83.741934"
+       d="M 67.94333,67.369444 92.072362,18.756538"
        id="path790" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.264583"
-       d="M 99.108997,132.35442 78.659926,83.803558"
+       d="M 112.40716,67.369024 91.958092,18.818162"
        id="path792" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.264583"
-       d="m 66.490847,108.14172 22.330888,0.37636"
+       d="m 79.789017,43.156324 22.330883,0.37636"
        id="path794" />
   </g>
 </svg>
